@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Runtime outputs
+workspace/*
+!workspace/.gitkeep
+
+# Logs
+*.log
+
+# OS / Editor
+.DS_Store
+.vscode/
+
+# Test caches
+.pytest_cache/
+.pytest_tmp/
