@@ -48,27 +48,46 @@ class LLMClient:
         prompt = f"{system_prompt}\n{user_prompt}".lower()
         title = self._extract_task_title(user_prompt)
         system = system_prompt.lower()
+        feedback = self._extract_human_feedback(user_prompt)
         if "revieweragent" in system or "review_report.md" in system:
-            return self._mock_review(title)
+            return self._with_revision_note(self._mock_review(title), feedback)
         if "final_summary.md" in system or "final summary" in system:
-            return self._mock_summary(title)
+            return self._with_revision_note(self._mock_summary(title), feedback)
         if "productagent" in prompt or "product requirements" in prompt:
-            return self._mock_prd(title)
+            return self._with_revision_note(self._mock_prd(title), feedback)
         if "architectagent" in prompt or "architecture.md" in prompt:
-            return self._mock_architecture(title)
+            return self._with_revision_note(self._mock_architecture(title), feedback)
         if "frontendagent" in prompt or "frontend_plan.md" in prompt:
-            return self._mock_frontend(title)
+            return self._with_revision_note(self._mock_frontend(title), feedback)
         if "backendagent" in prompt or "api_design.md" in prompt:
-            return self._mock_backend(title)
+            return self._with_revision_note(self._mock_backend(title), feedback)
         if "testagent" in prompt or "test_plan.md" in prompt:
-            return self._mock_tests(title)
-        return self._mock_prd(title)
+            return self._with_revision_note(self._mock_tests(title), feedback)
+        return self._with_revision_note(self._mock_prd(title), feedback)
 
     @staticmethod
     def _extract_task_title(text: str) -> str:
         match = re.search(r"original user task:\s*(.+)", text, flags=re.IGNORECASE | re.DOTALL)
         raw = match.group(1).strip().splitlines()[0] if match else "the requested software project"
         return raw[:120]
+
+    @staticmethod
+    def _extract_human_feedback(text: str) -> str | None:
+        match = re.search(r"Human feedback:\s*(.+?)(?:\n\nYou are revising|\Z)", text, flags=re.IGNORECASE | re.DOTALL)
+        if not match:
+            return None
+        return match.group(1).strip()
+
+    @staticmethod
+    def _with_revision_note(markdown: str, feedback: str | None) -> str:
+        if not feedback:
+            return markdown
+        return (
+            markdown.rstrip()
+            + "\n\n## Human Feedback Applied\n"
+            + f"- {feedback}\n"
+            + "- This mock revision preserves the original structure while applying the requested change.\n"
+        )
 
     def _mock_prd(self, title: str) -> str:
         return f"""# Product Requirements Document

@@ -21,10 +21,20 @@ class Settings:
 
 def load_settings(model_override: str | None = None) -> Settings:
     load_dotenv()
+    api_key = _clean_env_value(os.getenv("DEEPSEEK_API_KEY"))
+    base_url = _clean_env_value(os.getenv("DEEPSEEK_BASE_URL")) or "https://api.deepseek.com"
+    model = _clean_env_value(model_override) or _clean_env_value(os.getenv("DEEPSEEK_MODEL")) or "deepseek-v4-flash"
     return Settings(
-        deepseek_api_key=os.getenv("DEEPSEEK_API_KEY"),
-        deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-        deepseek_model=model_override or os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
+        deepseek_api_key=api_key,
+        deepseek_base_url=base_url,
+        deepseek_model=model,
         agent_temperature=float(os.getenv("AGENT_TEMPERATURE", "0.3")),
         agent_max_tokens=int(os.getenv("AGENT_MAX_TOKENS", "4096")),
     )
+
+
+def _clean_env_value(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip().strip('"').strip("'").strip()
+    return cleaned or None

@@ -52,6 +52,34 @@ class BaseAgent:
         )
         return output
 
+    def run_revision(self, context: AgentContext, human_feedback: str) -> str:
+        context.event_bus.emit(
+            from_agent=self.name,
+            type="agent_started",
+            content=f"Started revision for {self.output_artifact}",
+            artifact_refs=self.input_artifacts + [self.output_artifact],
+            status="running",
+        )
+        prompt = self._load_prompt()
+        user_prompt = self._build_revision_prompt(context, human_feedback)
+        output = context.llm_client.complete(prompt, user_prompt)
+        context.workspace.write_artifact(self.output_artifact, output)
+        context.event_bus.emit(
+            from_agent=self.name,
+            type="artifact_created",
+            content=f"Revised {self.output_artifact}",
+            artifact_refs=[self.output_artifact],
+            status="created",
+        )
+        context.event_bus.emit(
+            from_agent=self.name,
+            type="agent_completed",
+            content=f"Completed revision for {self.output_artifact}",
+            artifact_refs=[self.output_artifact],
+            status="succeeded",
+        )
+        return output
+
     def _load_prompt(self) -> str:
         prompt_path = Path(__file__).resolve().parents[1] / "prompts" / self.prompt_file
         return prompt_path.read_text(encoding="utf-8")
@@ -62,4 +90,18 @@ class BaseAgent:
             content = context.workspace.read_artifact(artifact)
             sections.append(f"Input artifact: {artifact}\n\n{content}\n")
         sections.append(f"Write only the markdown content for `{self.output_artifact}`.")
+        return "\n---\n".join(sections)
+
+    def _build_revision_prompt(self, context: AgentContext, human_feedback: str) -> str:
+        sections = [self._build_user_prompt(context)]
+        if context.workspace.artifact_exists(self.output_artifact):
+            sections.append(f"Current artifact: {self.output_artifact}\n\n{context.workspace.read_artifact(self.output_artifact)}")
+        sections.append(
+            "Human feedback:\n"
+            f"{human_feedback}\n\n"
+            "You are revising your previous artifact based on human feedback. "
+            "Keep the original role boundary. Apply the feedback concretely. "
+            "Preserve useful existing content and do not rewrite unrelated sections unnecessarily. "
+            "Keep markdown structure and write only the revised artifact content."
+        )
         return "\n---\n".join(sections)
