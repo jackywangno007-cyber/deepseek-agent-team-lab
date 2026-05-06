@@ -4,18 +4,28 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
 from backend.api.schemas import (
     ArtifactContentResponse,
+    ArtifactVersionContentResponse,
     CreateTaskRequest,
     CreateTaskResponse,
+    CreateFeedbackRequest,
+    CreateFeedbackResponse,
     EvaluationResponse,
     EventsResponse,
+    ListArtifactVersionsResponse,
     HealthResponse,
+    ListFeedbackResponse,
     ListArtifactsResponse,
+    ListRevisionsResponse,
     ListTasksResponse,
+    RevisionRequest,
+    RevisionResponse,
     TaskStatusResponse,
 )
 from backend.services.task_service import (
     ArtifactNotFoundError,
     EvaluationNotFoundError,
+    FeedbackNotFoundError,
+    InvalidAgentError,
     InvalidArtifactNameError,
     TaskNotFoundError,
     TaskService,
@@ -30,7 +40,7 @@ def get_service(request: Request) -> TaskService:
 
 @router.get("/health", response_model=HealthResponse)
 def health() -> dict:
-    return {"status": "ok", "version": "0.2.0"}
+    return {"status": "ok", "version": "0.3.0"}
 
 
 @router.post("/tasks", response_model=CreateTaskResponse)
@@ -118,7 +128,7 @@ def list_artifacts(task_id: str, request: Request) -> dict:
         raise HTTPException(status_code=404, detail="Task not found") from exc
 
 
-@router.get("/tasks/{task_id}/artifacts/{artifact_name:path}", response_model=ArtifactContentResponse)
+@router.get("/tasks/{task_id}/artifacts/{artifact_name}", response_model=ArtifactContentResponse)
 def read_artifact(task_id: str, artifact_name: str, request: Request) -> dict:
     try:
         content = get_service(request).read_task_artifact(task_id, artifact_name)
@@ -139,3 +149,94 @@ def get_evaluation(task_id: str, request: Request) -> dict:
         raise HTTPException(status_code=404, detail="Task not found") from exc
     except EvaluationNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Evaluation not found") from exc
+
+
+@router.post("/tasks/{task_id}/feedback", response_model=CreateFeedbackResponse)
+def create_feedback(task_id: str, payload: CreateFeedbackRequest, request: Request) -> dict:
+    service = get_service(request)
+    try:
+        feedback = service.create_feedback(
+            task_id=task_id,
+            target_agent=payload.target_agent,
+            target_artifact=payload.target_artifact,
+            content=payload.content,
+        )
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    except InvalidAgentError as exc:
+        raise HTTPException(status_code=400, detail="Invalid target agent") from exc
+    except InvalidArtifactNameError as exc:
+        raise HTTPException(status_code=400, detail="Invalid artifact name") from exc
+    except ArtifactNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Artifact not found") from exc
+    return {"feedback_id": feedback["feedback_id"], "status": feedback["status"]}
+
+
+@router.get("/tasks/{task_id}/feedback", response_model=ListFeedbackResponse)
+def list_feedback(task_id: str, request: Request) -> dict:
+    try:
+        return {"task_id": task_id, "feedback": get_service(request).list_feedback(task_id)}
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+
+
+@router.post("/tasks/{task_id}/revisions", response_model=RevisionResponse)
+def request_revision(task_id: str, payload: RevisionRequest, background_tasks: BackgroundTasks, request: Request) -> dict:
+    service = get_service(request)
+    try:
+        revision = service.request_revision(
+            task_id=task_id,
+            feedback_id=payload.feedback_id,
+            rerun_downstream=payload.rerun_downstream,
+            run_async=payload.run_async,
+        )
+        if payload.run_async:
+            background_tasks.add_task(service.run_revision_pipeline, task_id=task_id, revision_id=revision["revision_id"])
+            status = "RUNNING"
+        else:
+            service.run_revision_pipeline(task_id=task_id, revision_id=revision["revision_id"])
+            status = "COMPLETED"
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    except FeedbackNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Feedback not found") from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=service._safe_error(exc)) from exc
+    return {"revision_id": revision["revision_id"], "status": status}
+
+
+@router.get("/tasks/{task_id}/revisions", response_model=ListRevisionsResponse)
+def list_revisions(task_id: str, request: Request) -> dict:
+    try:
+        return {"task_id": task_id, "revisions": get_service(request).list_revisions(task_id)}
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+
+
+@router.get("/tasks/{task_id}/artifacts/{artifact_name}/versions", response_model=ListArtifactVersionsResponse)
+def list_artifact_versions(task_id: str, artifact_name: str, request: Request) -> dict:
+    try:
+        versions = get_service(request).list_artifact_versions(task_id, artifact_name)
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    except InvalidArtifactNameError as exc:
+        raise HTTPException(status_code=400, detail="Invalid artifact name") from exc
+    except ArtifactNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Artifact not found") from exc
+    return {"task_id": task_id, "artifact_name": artifact_name, "versions": versions}
+
+
+@router.get(
+    "/tasks/{task_id}/artifacts/{artifact_name}/versions/{version_name}",
+    response_model=ArtifactVersionContentResponse,
+)
+def read_artifact_version(task_id: str, artifact_name: str, version_name: str, request: Request) -> dict:
+    try:
+        content = get_service(request).read_artifact_version(task_id, artifact_name, version_name)
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    except InvalidArtifactNameError as exc:
+        raise HTTPException(status_code=400, detail="Invalid artifact version path") from exc
+    except ArtifactNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Artifact version not found") from exc
+    return {"task_id": task_id, "artifact_name": artifact_name, "version_name": version_name, "content": content}

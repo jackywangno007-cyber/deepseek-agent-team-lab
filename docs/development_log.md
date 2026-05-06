@@ -49,3 +49,46 @@ Introduce a professional Git workflow after V0.1 and V0.2 were completed.
 - Commit the current working codebase as the stable baseline.
 - Tag the baseline.
 - Continue work on a dedicated next-version branch.
+
+## 2026-05-06 - V0.3
+
+### Goal
+
+Upgrade the observable AgentOps dashboard into a human-in-the-loop multi-agent collaboration system.
+
+### Changes
+
+- Added human feedback persistence through `human_feedback.jsonl`.
+- Added revision requests and `revision_history.jsonl`.
+- Added artifact version backup under `versions/` before overwriting artifacts.
+- Added target-agent rerun and explicit downstream rerun rules.
+- Refreshed `evaluation.json` after revisions.
+- Added FastAPI endpoints for feedback, revisions, artifact versions, and version reads.
+- Added frontend HumanControlPanel, RevisionHistory, and ArtifactVersions components.
+- Updated API, frontend, manual testing, and human-in-the-loop documentation.
+
+### Tests Run
+
+- `.venv\Scripts\python.exe -m pytest`
+- `npm install` from `frontend/`
+- `npm run build` from `frontend/`
+- CLI mock task smoke test
+- Local backend health smoke test
+- Local frontend dev-server smoke test
+
+### Issues Encountered
+
+- Vite/esbuild needed normal process-spawn permissions on Windows; sandboxed build attempts can fail with `spawn EPERM`.
+- Artifact backup names initially used second-level timestamps, which could collide during fast repeated revisions.
+- The artifact-version API initially returned an empty list for a missing artifact instead of a clearer 404.
+
+### Lessons Learned
+
+- Human intervention is safer when feedback is persisted before revision starts.
+- Revision systems should never overwrite artifacts without first saving a versioned backup.
+- Upstream artifact changes need explicit downstream rerun rules so behavior stays understandable.
+- API contracts should distinguish "no versions yet" from "artifact does not exist."
+
+### Next Steps
+
+V0.4 - Evaluation-driven agent improvement or more advanced AgentOps features.

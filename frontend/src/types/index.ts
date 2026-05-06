@@ -79,3 +79,56 @@ export interface WebSocketErrorMessage {
 }
 
 export type TaskWebSocketMessage = WebSocketEventMessage | WebSocketFinishedMessage | WebSocketErrorMessage;
+
+export interface HumanFeedback {
+  feedback_id: string;
+  task_id: string;
+  target_agent: string;
+  target_artifact: string;
+  content: string;
+  created_at: string;
+  status: 'PENDING' | 'APPLIED' | 'FAILED' | string;
+}
+
+export interface CreateFeedbackRequest {
+  target_agent: string;
+  target_artifact: string;
+  content: string;
+}
+
+export interface CreateFeedbackResponse {
+  feedback_id: string;
+  status: string;
+}
+
+export interface RevisionRequest {
+  feedback_id: string;
+  rerun_downstream: boolean;
+  run_async: boolean;
+}
+
+export interface RevisionResponse {
+  revision_id: string;
+  status: string;
+}
+
+export interface RevisionRecord {
+  revision_id: string;
+  task_id: string;
+  feedback_id: string;
+  target_agent: string;
+  target_artifact: string;
+  backup_artifact?: string | null;
+  rerun_downstream: boolean;
+  status: 'CREATED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | string;
+  created_at: string;
+  completed_at?: string | null;
+  error?: string | null;
+}
+
+export interface ArtifactVersionInfo {
+  name: string;
+  path: string;
+  size_bytes: number;
+  created_at: string;
+}

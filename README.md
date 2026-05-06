@@ -209,9 +209,64 @@ Manual test checklist:
 Known limitations:
 
 - No authentication; local development only.
-- No human-in-the-loop controls yet.
 - Artifact markdown is displayed in a readable preformatted viewer.
 - WebSocket streaming is backed by simple backend polling over `events.jsonl`.
+
+## V0.3 Human-in-the-loop Revision
+
+Human feedback is an auditable instruction saved against a specific agent and artifact. Feedback is stored in:
+
+```text
+workspace/task_xxx/human_feedback.jsonl
+```
+
+Revision is a separate action. When a revision runs, the backend:
+
+1. reads saved feedback
+2. backs up the current artifact into `versions/`
+3. reruns the target agent with the human feedback
+4. optionally reruns downstream agents
+5. refreshes `evaluation.json`
+6. logs all actions into `events.jsonl`
+
+Revision history is stored in:
+
+```text
+workspace/task_xxx/revision_history.jsonl
+```
+
+Run locally:
+
+```bash
+python run_server.py
+cd frontend
+npm run dev
+```
+
+Run validation:
+
+```bash
+pytest
+cd frontend
+npm run build
+```
+
+Manual test:
+
+- Create a mock task in the browser.
+- Open `prd.md`.
+- Save feedback for `ProductAgent`.
+- Run revision with downstream rerun enabled.
+- Confirm EventTimeline shows revision events.
+- Confirm ArtifactVersions shows the old `prd.md`.
+- Confirm EvaluationPanel refreshes after completion.
+
+Current limitations:
+
+- No artifact diff view yet.
+- No approve/reject gate before applying a revision.
+- No task cancellation, pause, or resume controls.
+- Revision state is stored locally in workspace files rather than a database.
 
 ## Output Files
 

@@ -26,6 +26,9 @@ http://127.0.0.1:8000
 - `ArtifactExplorer.tsx`: clickable artifact list from the backend.
 - `ArtifactViewer.tsx`: selected artifact content viewer.
 - `EvaluationPanel.tsx`: rule-based evaluation result display.
+- `HumanControlPanel.tsx`: save human feedback and request revision.
+- `RevisionHistory.tsx`: show revision records.
+- `ArtifactVersions.tsx`: show backed up versions for the selected artifact.
 - `StatusBadge.tsx`: shared status label component.
 
 ## API Client
@@ -40,6 +43,12 @@ http://127.0.0.1:8000
 - `listArtifacts`
 - `getArtifact`
 - `getEvaluation`
+- `createFeedback`
+- `listFeedback`
+- `requestRevision`
+- `listRevisions`
+- `listArtifactVersions`
+- `getArtifactVersion`
 - `buildTaskEventsWebSocketUrl`
 
 Components should not construct backend URLs themselves.
@@ -89,3 +98,5 @@ The V0.3 UI establishes the visual surfaces needed for V0.4 human-in-the-loop co
 - evaluation result panel
 
 V0.4 can add pause, resume, revise, and message-to-agent controls without changing the basic dashboard layout.
+
+V0.3 now includes the first human-in-the-loop revision workflow. Future versions can improve it with diff views, approval gates, and more granular downstream rerun controls.

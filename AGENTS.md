@@ -77,7 +77,11 @@ pytest
 - Do not duplicate backend orchestration, evaluation, workspace, or artifact logic.
 - Keep API calls centralized in `frontend/src/api/client.ts`.
 - Keep agent status derivation in `frontend/src/utils/agentStatus.ts`.
-- Do not add pause, resume, revise, or message-to-agent controls in V0.3.
+- Human feedback must be persisted.
+- Revision must be logged.
+- Never overwrite an artifact without backup.
+- Keep revision logic explicit and easy to understand.
+- Do not add pause, resume, or message-to-agent controls beyond the V0.3 revision workflow.
 - Do not introduce a frontend state framework unless the UI complexity truly requires it.
 - Keep CLI, API, and frontend working together.
 - Do not expose API keys in browser-visible code or responses.

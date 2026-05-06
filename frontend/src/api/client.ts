@@ -2,8 +2,15 @@ import type {
   AgentEvent,
   ArtifactContent,
   ArtifactInfo,
+  ArtifactVersionInfo,
+  CreateFeedbackRequest,
+  CreateFeedbackResponse,
   EvaluationResult,
   HealthResponse,
+  HumanFeedback,
+  RevisionRecord,
+  RevisionRequest,
+  RevisionResponse,
   TaskCreateRequest,
   TaskCreateResponse,
   TaskMeta,
@@ -77,4 +84,42 @@ export async function getEvaluation(taskId: string): Promise<EvaluationResult> {
 export function buildTaskEventsWebSocketUrl(taskId: string): string {
   const wsBase = API_BASE_URL.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
   return `${wsBase}/ws/tasks/${encodeURIComponent(taskId)}/events`;
+}
+
+export function createFeedback(taskId: string, payload: CreateFeedbackRequest): Promise<CreateFeedbackResponse> {
+  return requestJson<CreateFeedbackResponse>(`/api/tasks/${encodeURIComponent(taskId)}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function listFeedback(taskId: string): Promise<HumanFeedback[]> {
+  const payload = await requestJson<{ feedback: HumanFeedback[] }>(`/api/tasks/${encodeURIComponent(taskId)}/feedback`);
+  return payload.feedback;
+}
+
+export function requestRevision(taskId: string, payload: RevisionRequest): Promise<RevisionResponse> {
+  return requestJson<RevisionResponse>(`/api/tasks/${encodeURIComponent(taskId)}/revisions`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function listRevisions(taskId: string): Promise<RevisionRecord[]> {
+  const payload = await requestJson<{ revisions: RevisionRecord[] }>(`/api/tasks/${encodeURIComponent(taskId)}/revisions`);
+  return payload.revisions;
+}
+
+export async function listArtifactVersions(taskId: string, artifactName: string): Promise<ArtifactVersionInfo[]> {
+  const encodedName = encodeURIComponent(artifactName);
+  const payload = await requestJson<{ versions: ArtifactVersionInfo[] }>(
+    `/api/tasks/${encodeURIComponent(taskId)}/artifacts/${encodedName}/versions`,
+  );
+  return payload.versions;
+}
+
+export async function getArtifactVersion(taskId: string, artifactName: string, versionName: string): Promise<ArtifactContent> {
+  return requestJson<ArtifactContent>(
+    `/api/tasks/${encodeURIComponent(taskId)}/artifacts/${encodeURIComponent(artifactName)}/versions/${encodeURIComponent(versionName)}`,
+  );
 }
