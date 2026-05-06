@@ -1,6 +1,6 @@
 # DeepSeek Agent Team Lab
 
-DeepSeek Agent Team Lab is a lightweight local multi-agent collaboration system inspired by Manager-Workers architectures such as HiClaw. V0.1 validated the command-line agent runtime. V0.2 added a local FastAPI service. V0.3 adds a React dashboard for visual task creation, event streaming, artifact inspection, and evaluation review.
+DeepSeek Agent Team Lab is a lightweight local multi-agent collaboration system inspired by Manager-Workers architectures such as HiClaw. V0.1 validated the command-line agent runtime. V0.2 added a local FastAPI service. V0.3 added a React dashboard and human-in-the-loop revision workflow. V0.4 adds evaluation-driven improvement suggestions that keep humans in the approval loop.
 
 The system accepts a software project requirement, runs a fixed serial team of role-based agents, and writes every intermediate result as a markdown artifact inside an isolated task workspace.
 
@@ -209,9 +209,95 @@ Manual test checklist:
 Known limitations:
 
 - No authentication; local development only.
-- No human-in-the-loop controls yet.
 - Artifact markdown is displayed in a readable preformatted viewer.
 - WebSocket streaming is backed by simple backend polling over `events.jsonl`.
+
+## V0.3 Human-in-the-loop Revision
+
+Human feedback is an auditable instruction saved against a specific agent and artifact. Feedback is stored in:
+
+```text
+workspace/task_xxx/human_feedback.jsonl
+```
+
+Revision is a separate action. When a revision runs, the backend:
+
+1. reads saved feedback
+2. backs up the current artifact into `versions/`
+3. reruns the target agent with the human feedback
+4. optionally reruns downstream agents
+5. refreshes `evaluation.json`
+6. logs all actions into `events.jsonl`
+
+Revision history is stored in:
+
+```text
+workspace/task_xxx/revision_history.jsonl
+```
+
+Run locally:
+
+```bash
+python run_server.py
+cd frontend
+npm run dev
+```
+
+Run validation:
+
+```bash
+pytest
+cd frontend
+npm run build
+```
+
+Manual test:
+
+- Create a mock task in the browser.
+- Open `prd.md`.
+- Save feedback for `ProductAgent`.
+- Run revision with downstream rerun enabled.
+- Confirm EventTimeline shows revision events.
+- Confirm ArtifactVersions shows the old `prd.md`.
+- Confirm EvaluationPanel refreshes after completion.
+
+Current limitations:
+
+- No artifact diff view yet.
+- No approve/reject gate before applying a revision.
+- No task cancellation, pause, or resume controls.
+- Revision state is stored locally in workspace files rather than a database.
+
+## V0.4 Evaluation-driven Improvement
+
+V0.4 helps the system propose what to revise instead of relying entirely on the human to find issues manually.
+
+The flow is:
+
+1. ReviewerAgent writes `review_report.md`.
+2. Evaluator writes `evaluation.json`.
+3. User clicks "Generate improvement suggestions".
+4. The backend creates `improvement_suggestions.jsonl`.
+5. User approves, edits, or rejects each suggestion.
+6. Approved suggestions become normal V0.3 human feedback.
+7. Existing revision workflow runs and writes history.
+8. Evaluation comparison is saved as `evaluation_compare.json`.
+
+New workspace files:
+
+- `improvement_suggestions.jsonl`
+- `improvement_history.jsonl`
+- `evaluation_compare.json`
+
+Manual test:
+
+- Create a mock task in the browser.
+- Wait until it is completed.
+- Generate improvement suggestions.
+- Approve one suggestion with downstream rerun enabled.
+- Confirm EventTimeline shows improvement events.
+- Confirm ImprovementHistory and EvaluationComparePanel update.
+- Reject another suggestion and confirm the rejected status is persisted.
 
 ## Output Files
 
@@ -277,9 +363,13 @@ git tag v0.3.0
 
 V0.2: Add a small FastAPI backend to start and inspect task runs. Completed.
 
-V0.3: Add a React visualization for artifacts, event logs, and agent status.
+V0.3: Add a React visualization plus human-in-the-loop artifact revision workflow. Completed.
 
-V0.4: Add human-in-the-loop controls such as pause, resume, revise, and message-to-agent while keeping artifacts and boundaries explicit.
+V0.4: Add evaluation-driven improvement suggestions that parse review findings, propose revisions, and keep humans in the approval loop. Completed.
+
+The V0.4 design is documented in [docs/v0.4_design.md](docs/v0.4_design.md).
+
+Release notes are available in [docs/release_notes_v0.4.md](docs/release_notes_v0.4.md).
 
 ## Resume-Ready Highlights
 

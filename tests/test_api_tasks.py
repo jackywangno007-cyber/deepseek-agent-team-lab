@@ -20,7 +20,7 @@ def test_health_works(tmp_path: Path) -> None:
     response = client.get("/api/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": "0.2.0"}
+    assert response.json() == {"status": "ok", "version": "0.4.0"}
 
 
 def test_create_list_and_get_completed_task(tmp_path: Path) -> None:

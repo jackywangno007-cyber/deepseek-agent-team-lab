@@ -108,3 +108,27 @@ Confirm:
 - Backend status shows `OFFLINE`.
 - Task loading or task creation shows a friendly error.
 - No raw stack traces are shown.
+
+## 9. Human-in-the-loop Revision
+
+Create or select a completed mock task.
+
+Open `prd.md`, then in Human Control:
+
+- target artifact: `prd.md`
+- target agent: `ProductAgent`
+- feedback: `The target users should be university students. Add a section for course registration deadline reminders.`
+- downstream rerun: checked
+
+Click `Save feedback`, then `Run revision`.
+
+Confirm:
+
+- EventTimeline shows `human_feedback_created`.
+- EventTimeline shows `revision_started`.
+- EventTimeline shows `artifact_version_backup`.
+- EventTimeline shows `revision_completed`.
+- RevisionHistory shows a completed revision.
+- ArtifactVersions shows a backed up `prd` version.
+- Current `prd.md` includes the feedback text in mock mode.
+- EvaluationPanel refreshes and still passes.

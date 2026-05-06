@@ -11,7 +11,7 @@ from backend.services.task_service import TaskService
 def create_app(task_service: TaskService | None = None) -> FastAPI:
     app = FastAPI(
         title="DeepSeek Agent Team Lab API",
-        version="0.2.0",
+        version="0.4.0",
         description="A lightweight local API service for multi-agent collaboration.",
     )
     app.state.task_service = task_service or TaskService()
@@ -23,6 +23,7 @@ def create_app(task_service: TaskService | None = None) -> FastAPI:
             "http://localhost:3000",
             "http://127.0.0.1:3000",
         ],
+        allow_origin_regex=r"^http://(localhost|127\.0\.0\.1):\d+$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
