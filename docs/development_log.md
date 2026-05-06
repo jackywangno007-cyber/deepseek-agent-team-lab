@@ -72,6 +72,7 @@ Upgrade the observable AgentOps dashboard into a human-in-the-loop multi-agent c
 - `.venv\Scripts\python.exe -m pytest`
 - `npm install` from `frontend/`
 - `npm run build` from `frontend/`
+- Live API smoke check: health, mock task creation, suggestion generation, approval, history, evaluation comparison, and rejection.
 - CLI mock task smoke test
 - Local backend health smoke test
 - Local frontend dev-server smoke test
@@ -151,6 +152,7 @@ Implement the evaluation-driven improvement loop described in the V0.4 design.
 
 - API version tests needed to move from `0.3.0` to `0.4.0`.
 - JSX text containing `->` needed escaping in React components.
+- Vite/esbuild can require normal process-spawn permissions on Windows; sandboxed builds may fail with `spawn EPERM`.
 
 ### Lessons Learned
 

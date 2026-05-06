@@ -137,7 +137,25 @@ Upgrade the system from manual human-found revisions to system-proposed, human-a
 
 ### Validation
 
-V0.4 should be validated with mock task creation, suggestion generation, approval, revision, rejection, evaluation comparison, backend pytest, and frontend build.
+V0.4 was validated with:
+
+- `pytest`: 23 passed
+- `npm run build`: passed
+- `/api/health`: returned `0.4.0`
+- Mock task creation worked
+- Improvement generation returned suggestions
+- Suggestion approval created human feedback and revision records
+- Improvement history was written
+- Evaluation comparison was written
+- Suggestion rejection was persisted
+
+### Known Limitations
+
+- Suggestion generation is still rule-based.
+- No visual diff view yet.
+- No advanced LLM-assisted suggestion refinement yet.
+- Evaluation comparison is still simple.
+- Suggestion quality is good enough for workflow validation, but not yet deeply intelligent.
 
 ## Next Version Plan
 

@@ -369,6 +369,8 @@ V0.4: Add evaluation-driven improvement suggestions that parse review findings, 
 
 The V0.4 design is documented in [docs/v0.4_design.md](docs/v0.4_design.md).
 
+Release notes are available in [docs/release_notes_v0.4.md](docs/release_notes_v0.4.md).
+
 ## Resume-Ready Highlights
 
 - Built a framework-free Manager-Workers multi-agent pipeline.
