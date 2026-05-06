@@ -126,6 +126,42 @@ Design the next engineering iteration without implementing V0.4 code.
 - Add frontend panels for suggestions and evaluation comparison.
 - Keep all V0.4 changes behind explicit human approval.
 
+## 2026-05-06 - V0.4 Implementation
+
+### Goal
+
+Implement the evaluation-driven improvement loop described in the V0.4 design.
+
+### Changes
+
+- Added a rule-based `ImprovementEngine`.
+- Added `ImprovementService` to persist suggestions, history, and evaluation comparisons.
+- Added APIs for generating, listing, approving, and rejecting suggestions.
+- Reused V0.3 feedback and revision workflow for approved suggestions.
+- Added frontend panels for suggestions, improvement history, and evaluation comparison.
+- Added backend tests for suggestion generation, approval, rejection, and evaluation comparison.
+
+### Tests Run
+
+- `.venv\Scripts\python.exe -m pytest`
+- `npm install` from `frontend/`
+- `npm run build` from `frontend/`
+
+### Issues Encountered
+
+- API version tests needed to move from `0.3.0` to `0.4.0`.
+- JSX text containing `->` needed escaping in React components.
+
+### Lessons Learned
+
+- The existing V0.3 revision workflow was reusable with a thin improvement service.
+- Rule-based suggestion generation is enough to validate the improvement loop before adding smarter extraction.
+
+### Next Steps
+
+- Manually test the full browser flow.
+- Review suggestion quality and mapping rules before expanding V0.4.
+
 ## 2026-05-06 - V0.3 Final Polish
 
 ### Goal

@@ -132,3 +132,66 @@ export interface ArtifactVersionInfo {
   size_bytes: number;
   created_at: string;
 }
+
+export interface ImprovementSuggestion {
+  suggestion_id: string;
+  task_id: string;
+  issue_summary: string;
+  responsible_agent: string;
+  target_artifact: string;
+  proposed_feedback: string;
+  severity: 'low' | 'medium' | 'high' | string;
+  reason: string;
+  source: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'APPLIED' | 'FAILED' | string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GenerateImprovementsResponse {
+  task_id: string;
+  suggestions: ImprovementSuggestion[];
+}
+
+export interface ApproveImprovementRequest {
+  edited_feedback?: string | null;
+  rerun_downstream: boolean;
+  run_async: boolean;
+}
+
+export interface ApproveImprovementResponse {
+  suggestion_id: string;
+  feedback_id: string;
+  revision_id: string;
+  status: string;
+}
+
+export interface RejectImprovementRequest {
+  reason?: string | null;
+}
+
+export interface ImprovementHistoryRecord {
+  improvement_id: string;
+  task_id: string;
+  suggestion_id: string;
+  action: 'APPROVED' | 'REJECTED' | string;
+  responsible_agent: string;
+  target_artifact: string;
+  feedback_id?: string | null;
+  revision_id?: string | null;
+  before_evaluation: EvaluationResult;
+  after_evaluation: EvaluationResult;
+  status: string;
+  created_at: string;
+  completed_at?: string | null;
+  error?: string | null;
+  reason?: string | null;
+}
+
+export interface EvaluationCompareResult {
+  task_id: string;
+  before: EvaluationResult;
+  after: EvaluationResult;
+  changed: boolean;
+  summary: string;
+}

@@ -1,19 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  approveImprovementSuggestion,
   buildTaskEventsWebSocketUrl,
   createTask,
   createFeedback,
+  generateImprovementSuggestions,
   getArtifact,
   getArtifactVersion,
   getEvaluation,
+  getEvaluationCompare,
   getHealth,
+  getImprovementHistory,
   getTask,
   getTaskEvents,
+  listImprovementSuggestions,
   listArtifactVersions,
   listArtifacts,
   listFeedback,
   listRevisions,
   listTasks,
+  rejectImprovementSuggestion,
   requestRevision,
 } from './api/client';
 import { AgentBoard } from './components/AgentBoard';
@@ -21,8 +27,11 @@ import { ArtifactExplorer } from './components/ArtifactExplorer';
 import { ArtifactVersions } from './components/ArtifactVersions';
 import { ArtifactViewer } from './components/ArtifactViewer';
 import { EvaluationPanel } from './components/EvaluationPanel';
+import { EvaluationComparePanel } from './components/EvaluationComparePanel';
 import { EventTimeline } from './components/EventTimeline';
 import { HumanControlPanel } from './components/HumanControlPanel';
+import { ImprovementHistory } from './components/ImprovementHistory';
+import { ImprovementSuggestions } from './components/ImprovementSuggestions';
 import { Layout } from './components/Layout';
 import { RevisionHistory } from './components/RevisionHistory';
 import { TaskCreator } from './components/TaskCreator';
@@ -33,6 +42,9 @@ import type {
   ArtifactVersionInfo,
   EvaluationResult,
   HumanFeedback,
+  EvaluationCompareResult,
+  ImprovementHistoryRecord,
+  ImprovementSuggestion,
   RevisionRecord,
   TaskMeta,
   TaskWebSocketMessage,
@@ -75,6 +87,9 @@ export default function App() {
   const [feedback, setFeedback] = useState<HumanFeedback[]>([]);
   const [revisions, setRevisions] = useState<RevisionRecord[]>([]);
   const [versions, setVersions] = useState<ArtifactVersionInfo[]>([]);
+  const [improvements, setImprovements] = useState<ImprovementSuggestion[]>([]);
+  const [improvementHistory, setImprovementHistory] = useState<ImprovementHistoryRecord[]>([]);
+  const [evaluationCompare, setEvaluationCompare] = useState<EvaluationCompareResult | null>(null);
   const [taskLoading, setTaskLoading] = useState(false);
   const [taskListLoading, setTaskListLoading] = useState(false);
   const [artifactLoading, setArtifactLoading] = useState(false);
@@ -82,12 +97,18 @@ export default function App() {
   const [controlLoading, setControlLoading] = useState(false);
   const [revisionLoading, setRevisionLoading] = useState(false);
   const [versionsLoading, setVersionsLoading] = useState(false);
+  const [improvementLoading, setImprovementLoading] = useState(false);
+  const [improvementHistoryLoading, setImprovementHistoryLoading] = useState(false);
+  const [evaluationCompareLoading, setEvaluationCompareLoading] = useState(false);
   const [taskListError, setTaskListError] = useState<string | null>(null);
   const [artifactError, setArtifactError] = useState<string | null>(null);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
   const [controlError, setControlError] = useState<string | null>(null);
   const [revisionError, setRevisionError] = useState<string | null>(null);
   const [versionsError, setVersionsError] = useState<string | null>(null);
+  const [improvementError, setImprovementError] = useState<string | null>(null);
+  const [improvementHistoryError, setImprovementHistoryError] = useState<string | null>(null);
+  const [evaluationCompareError, setEvaluationCompareError] = useState<string | null>(null);
   const [websocketStatus, setWebsocketStatus] = useState('IDLE');
   const socketRef = useRef<WebSocket | null>(null);
   const backendStatusRef = useRef('CHECKING');
@@ -186,6 +207,43 @@ export default function App() {
     }
   }, []);
 
+  const loadImprovements = useCallback(async (taskId: string) => {
+    setImprovementLoading(true);
+    setImprovementError(null);
+    try {
+      setImprovements(await listImprovementSuggestions(taskId));
+    } catch (error) {
+      setImprovementError(friendlyError(error, 'Could not load improvement suggestions.'));
+    } finally {
+      setImprovementLoading(false);
+    }
+  }, []);
+
+  const loadImprovementHistory = useCallback(async (taskId: string) => {
+    setImprovementHistoryLoading(true);
+    setImprovementHistoryError(null);
+    try {
+      setImprovementHistory(await getImprovementHistory(taskId));
+    } catch (error) {
+      setImprovementHistoryError(friendlyError(error, 'Could not load improvement history.'));
+    } finally {
+      setImprovementHistoryLoading(false);
+    }
+  }, []);
+
+  const loadEvaluationCompare = useCallback(async (taskId: string) => {
+    setEvaluationCompareLoading(true);
+    setEvaluationCompareError(null);
+    try {
+      setEvaluationCompare(await getEvaluationCompare(taskId));
+    } catch (error) {
+      setEvaluationCompare(null);
+      setEvaluationCompareError(friendlyError(error, 'Could not load evaluation comparison.'));
+    } finally {
+      setEvaluationCompareLoading(false);
+    }
+  }, []);
+
   const connectEvents = useCallback(
     (taskId: string) => {
       socketRef.current?.close();
@@ -216,6 +274,9 @@ export default function App() {
             loadFeedback(taskId),
             loadRevisions(taskId),
             loadVersions(taskId, selectedArtifact),
+            loadImprovements(taskId),
+            loadImprovementHistory(taskId),
+            loadEvaluationCompare(taskId),
           ]);
         }
         if (payload.type === 'error') {
@@ -233,7 +294,19 @@ export default function App() {
         }
       };
     },
-    [loadArtifacts, loadEvaluation, loadFeedback, loadRevisions, loadVersions, refreshSelectedTask, refreshTasks, selectedArtifact],
+    [
+      loadArtifacts,
+      loadEvaluation,
+      loadEvaluationCompare,
+      loadFeedback,
+      loadImprovementHistory,
+      loadImprovements,
+      loadRevisions,
+      loadVersions,
+      refreshSelectedTask,
+      refreshTasks,
+      selectedArtifact,
+    ],
   );
 
   const selectTask = useCallback(
@@ -246,6 +319,9 @@ export default function App() {
       setFeedback([]);
       setRevisions([]);
       setVersions([]);
+      setImprovements([]);
+      setImprovementHistory([]);
+      setEvaluationCompare(null);
       setWebsocketStatus('IDLE');
       try {
         const meta = await refreshSelectedTask(taskId);
@@ -255,6 +331,9 @@ export default function App() {
           loadEvaluation(taskId),
           loadFeedback(taskId),
           loadRevisions(taskId),
+          loadImprovements(taskId),
+          loadImprovementHistory(taskId),
+          loadEvaluationCompare(taskId),
         ]);
         if (meta.status === 'RUNNING') {
           connectEvents(taskId);
@@ -263,7 +342,18 @@ export default function App() {
         setTaskListError(friendlyError(error, 'Could not load the selected task.'));
       }
     },
-    [connectEvents, loadArtifacts, loadEvaluation, loadEvents, loadFeedback, loadRevisions, refreshSelectedTask],
+    [
+      connectEvents,
+      loadArtifacts,
+      loadEvaluation,
+      loadEvaluationCompare,
+      loadEvents,
+      loadFeedback,
+      loadImprovementHistory,
+      loadImprovements,
+      loadRevisions,
+      refreshSelectedTask,
+    ],
   );
 
   async function handleCreateTask(task: string, model: string, mock: boolean) {
@@ -312,6 +402,67 @@ export default function App() {
       setControlError(friendlyError(error, 'Could not start revision.'));
     } finally {
       setControlLoading(false);
+    }
+  }
+
+  async function handleGenerateImprovements() {
+    if (!selectedTask) {
+      return;
+    }
+    setImprovementLoading(true);
+    setImprovementError(null);
+    try {
+      const response = await generateImprovementSuggestions(selectedTask.task_id, false);
+      setImprovements(response.suggestions);
+      await Promise.all([loadEvents(selectedTask.task_id), loadImprovementHistory(selectedTask.task_id), loadEvaluationCompare(selectedTask.task_id)]);
+    } catch (error) {
+      setImprovementError(friendlyError(error, 'Could not generate improvement suggestions.'));
+    } finally {
+      setImprovementLoading(false);
+    }
+  }
+
+  async function handleApproveImprovement(suggestionId: string, editedFeedback: string, rerunDownstream: boolean) {
+    if (!selectedTask) {
+      return;
+    }
+    setImprovementLoading(true);
+    setImprovementError(null);
+    try {
+      const response = await approveImprovementSuggestion(selectedTask.task_id, suggestionId, {
+        edited_feedback: editedFeedback,
+        rerun_downstream: rerunDownstream,
+        run_async: true,
+      });
+      setWebsocketStatus(`IMPROVEMENT_${response.status}`);
+      connectEvents(selectedTask.task_id);
+      await Promise.all([
+        refreshSelectedTask(selectedTask.task_id),
+        loadFeedback(selectedTask.task_id),
+        loadRevisions(selectedTask.task_id),
+        loadImprovements(selectedTask.task_id),
+        loadImprovementHistory(selectedTask.task_id),
+      ]);
+    } catch (error) {
+      setImprovementError(friendlyError(error, 'Could not approve improvement suggestion.'));
+    } finally {
+      setImprovementLoading(false);
+    }
+  }
+
+  async function handleRejectImprovement(suggestionId: string, reason: string) {
+    if (!selectedTask) {
+      return;
+    }
+    setImprovementLoading(true);
+    setImprovementError(null);
+    try {
+      await rejectImprovementSuggestion(selectedTask.task_id, suggestionId, { reason });
+      await Promise.all([loadImprovements(selectedTask.task_id), loadImprovementHistory(selectedTask.task_id), loadEvents(selectedTask.task_id)]);
+    } catch (error) {
+      setImprovementError(friendlyError(error, 'Could not reject improvement suggestion.'));
+    } finally {
+      setImprovementLoading(false);
     }
   }
 
@@ -428,7 +579,18 @@ export default function App() {
         onSaveFeedback={handleSaveFeedback}
         onRunRevision={handleRunRevision}
       />
+      <ImprovementSuggestions
+        suggestions={improvements}
+        loading={improvementLoading}
+        disabled={!selectedTask || selectedTask.status === 'RUNNING'}
+        error={improvementError}
+        onGenerate={handleGenerateImprovements}
+        onApprove={handleApproveImprovement}
+        onReject={handleRejectImprovement}
+      />
+      <ImprovementHistory history={improvementHistory} loading={improvementHistoryLoading} error={improvementHistoryError} />
       <RevisionHistory revisions={revisions} loading={revisionLoading} error={revisionError} />
+      <EvaluationComparePanel compare={evaluationCompare} loading={evaluationCompareLoading} error={evaluationCompareError} />
       <EvaluationPanel evaluation={evaluation} loading={evaluationLoading} error={evaluationError} />
     </>
   );

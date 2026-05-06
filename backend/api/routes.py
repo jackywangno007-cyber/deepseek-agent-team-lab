@@ -3,24 +3,34 @@ from __future__ import annotations
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
 from backend.api.schemas import (
+    ApproveImprovementRequest,
+    ApproveImprovementResponse,
     ArtifactContentResponse,
     ArtifactVersionContentResponse,
     CreateTaskRequest,
     CreateTaskResponse,
     CreateFeedbackRequest,
     CreateFeedbackResponse,
+    EvaluationCompareResponse,
     EvaluationResponse,
     EventsResponse,
+    GenerateImprovementsRequest,
+    GenerateImprovementsResponse,
     ListArtifactVersionsResponse,
     HealthResponse,
+    ImprovementHistoryResponse,
     ListFeedbackResponse,
     ListArtifactsResponse,
+    ListImprovementsResponse,
     ListRevisionsResponse,
     ListTasksResponse,
+    RejectImprovementRequest,
+    RejectImprovementResponse,
     RevisionRequest,
     RevisionResponse,
     TaskStatusResponse,
 )
+from backend.services.improvement_service import ImprovementService, SuggestionNotFoundError
 from backend.services.task_service import (
     ArtifactNotFoundError,
     EvaluationNotFoundError,
@@ -38,9 +48,13 @@ def get_service(request: Request) -> TaskService:
     return request.app.state.task_service
 
 
+def get_improvement_service(request: Request) -> ImprovementService:
+    return ImprovementService(get_service(request))
+
+
 @router.get("/health", response_model=HealthResponse)
 def health() -> dict:
-    return {"status": "ok", "version": "0.3.0"}
+    return {"status": "ok", "version": "0.4.0"}
 
 
 @router.post("/tasks", response_model=CreateTaskResponse)
@@ -151,6 +165,14 @@ def get_evaluation(task_id: str, request: Request) -> dict:
         raise HTTPException(status_code=404, detail="Evaluation not found") from exc
 
 
+@router.get("/tasks/{task_id}/evaluation/compare", response_model=EvaluationCompareResponse)
+def get_evaluation_compare(task_id: str, request: Request) -> dict:
+    try:
+        return get_improvement_service(request).get_evaluation_compare(task_id)
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+
+
 @router.post("/tasks/{task_id}/feedback", response_model=CreateFeedbackResponse)
 def create_feedback(task_id: str, payload: CreateFeedbackRequest, request: Request) -> dict:
     service = get_service(request)
@@ -240,3 +262,75 @@ def read_artifact_version(task_id: str, artifact_name: str, version_name: str, r
     except ArtifactNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Artifact version not found") from exc
     return {"task_id": task_id, "artifact_name": artifact_name, "version_name": version_name, "content": content}
+
+
+@router.post("/tasks/{task_id}/improvements/generate", response_model=GenerateImprovementsResponse)
+def generate_improvements(task_id: str, payload: GenerateImprovementsRequest, request: Request) -> dict:
+    try:
+        suggestions = get_improvement_service(request).generate_suggestions(task_id, force=payload.force)
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    except ArtifactNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Required artifact not found") from exc
+    return {"task_id": task_id, "suggestions": suggestions}
+
+
+@router.get("/tasks/{task_id}/improvements", response_model=ListImprovementsResponse)
+def list_improvements(task_id: str, request: Request) -> dict:
+    try:
+        return {"task_id": task_id, "suggestions": get_improvement_service(request).list_suggestions(task_id)}
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+
+
+@router.post("/tasks/{task_id}/improvements/{suggestion_id}/approve", response_model=ApproveImprovementResponse)
+def approve_improvement(
+    task_id: str,
+    suggestion_id: str,
+    payload: ApproveImprovementRequest,
+    background_tasks: BackgroundTasks,
+    request: Request,
+) -> dict:
+    service = get_improvement_service(request)
+    try:
+        result = service.approve_suggestion(
+            task_id=task_id,
+            suggestion_id=suggestion_id,
+            edited_feedback=payload.edited_feedback,
+            rerun_downstream=payload.rerun_downstream,
+            run_async=payload.run_async,
+        )
+        if payload.run_async:
+            history = service.list_history(task_id)
+            improvement = next((item for item in reversed(history) if item.get("revision_id") == result["revision_id"]), None)
+            if improvement:
+                background_tasks.add_task(service.run_improvement_revision, task_id=task_id, improvement_id=improvement["improvement_id"])
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    except SuggestionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Suggestion not found") from exc
+    except (ArtifactNotFoundError, InvalidAgentError, InvalidArtifactNameError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FeedbackNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Feedback not found") from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=get_service(request)._safe_error(exc)) from exc
+    return result
+
+
+@router.post("/tasks/{task_id}/improvements/{suggestion_id}/reject", response_model=RejectImprovementResponse)
+def reject_improvement(task_id: str, suggestion_id: str, payload: RejectImprovementRequest, request: Request) -> dict:
+    try:
+        return get_improvement_service(request).reject_suggestion(task_id=task_id, suggestion_id=suggestion_id, reason=payload.reason)
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    except SuggestionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Suggestion not found") from exc
+
+
+@router.get("/tasks/{task_id}/improvements/history", response_model=ImprovementHistoryResponse)
+def get_improvement_history(task_id: str, request: Request) -> dict:
+    try:
+        return {"task_id": task_id, "history": get_improvement_service(request).list_history(task_id)}
+    except TaskNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc

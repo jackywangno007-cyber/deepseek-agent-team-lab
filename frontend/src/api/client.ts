@@ -1,13 +1,20 @@
 import type {
   AgentEvent,
+  ApproveImprovementRequest,
+  ApproveImprovementResponse,
   ArtifactContent,
   ArtifactInfo,
   ArtifactVersionInfo,
   CreateFeedbackRequest,
   CreateFeedbackResponse,
+  EvaluationCompareResult,
   EvaluationResult,
+  GenerateImprovementsResponse,
   HealthResponse,
   HumanFeedback,
+  ImprovementHistoryRecord,
+  ImprovementSuggestion,
+  RejectImprovementRequest,
   RevisionRecord,
   RevisionRequest,
   RevisionResponse,
@@ -123,4 +130,49 @@ export async function getArtifactVersion(taskId: string, artifactName: string, v
   return requestJson<ArtifactContent>(
     `/api/tasks/${encodeURIComponent(taskId)}/artifacts/${encodeURIComponent(artifactName)}/versions/${encodeURIComponent(versionName)}`,
   );
+}
+
+export function generateImprovementSuggestions(taskId: string, force = false): Promise<GenerateImprovementsResponse> {
+  return requestJson<GenerateImprovementsResponse>(`/api/tasks/${encodeURIComponent(taskId)}/improvements/generate`, {
+    method: 'POST',
+    body: JSON.stringify({ force }),
+  });
+}
+
+export async function listImprovementSuggestions(taskId: string): Promise<ImprovementSuggestion[]> {
+  const payload = await requestJson<{ suggestions: ImprovementSuggestion[] }>(`/api/tasks/${encodeURIComponent(taskId)}/improvements`);
+  return payload.suggestions;
+}
+
+export function approveImprovementSuggestion(
+  taskId: string,
+  suggestionId: string,
+  payload: ApproveImprovementRequest,
+): Promise<ApproveImprovementResponse> {
+  return requestJson<ApproveImprovementResponse>(
+    `/api/tasks/${encodeURIComponent(taskId)}/improvements/${encodeURIComponent(suggestionId)}/approve`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function rejectImprovementSuggestion(taskId: string, suggestionId: string, payload: RejectImprovementRequest): Promise<{ suggestion_id: string; status: string }> {
+  return requestJson<{ suggestion_id: string; status: string }>(
+    `/api/tasks/${encodeURIComponent(taskId)}/improvements/${encodeURIComponent(suggestionId)}/reject`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function getImprovementHistory(taskId: string): Promise<ImprovementHistoryRecord[]> {
+  const payload = await requestJson<{ history: ImprovementHistoryRecord[] }>(`/api/tasks/${encodeURIComponent(taskId)}/improvements/history`);
+  return payload.history;
+}
+
+export function getEvaluationCompare(taskId: string): Promise<EvaluationCompareResult> {
+  return requestJson<EvaluationCompareResult>(`/api/tasks/${encodeURIComponent(taskId)}/evaluation/compare`);
 }

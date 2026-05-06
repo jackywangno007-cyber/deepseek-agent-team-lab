@@ -134,7 +134,9 @@ button {
 .task-form textarea,
 .task-form input,
 .task-form select,
-.revision-runner select {
+.revision-runner select,
+.improvement-item textarea,
+.improvement-item input {
   border: 1px solid #ccd5e1;
   border-radius: 6px;
   color: #1d232f;
@@ -145,7 +147,9 @@ button {
 .task-form textarea:focus,
 .task-form input:focus,
 .task-form select:focus,
-.revision-runner select:focus {
+.revision-runner select:focus,
+.improvement-item textarea:focus,
+.improvement-item input:focus {
   border-color: #3978d8;
   outline: 2px solid rgba(57, 120, 216, 0.16);
 }
@@ -157,7 +161,8 @@ button {
 
 .task-form button,
 .secondary-button,
-.revision-runner button {
+.revision-runner button,
+.improvement-item button {
   background: #255fb8;
   border: 0;
   border-radius: 6px;
@@ -167,7 +172,8 @@ button {
 }
 
 .task-form button:disabled,
-.revision-runner button:disabled {
+.revision-runner button:disabled,
+.improvement-item button:disabled {
   background: #94a3b8;
   cursor: not-allowed;
 }
@@ -242,20 +248,25 @@ button {
 .status-completed,
 .status-passed,
 .status-finished,
-.status-connected {
+.status-connected,
+.status-applied,
+.status-approved,
+.status-unchanged {
   background: #dcfce7;
   color: #166534;
 }
 
 .status-running,
-.status-connecting {
+.status-connecting,
+.status-changed {
   background: #dbeafe;
   color: #1d4ed8;
 }
 
 .status-created,
 .status-waiting,
-.status-checking {
+.status-checking,
+.status-pending {
   background: #fef3c7;
   color: #92400e;
 }
@@ -263,7 +274,8 @@ button {
 .status-failed,
 .status-error,
 .status-offline,
-.status-disconnected {
+.status-disconnected,
+.status-rejected {
   background: #fee2e2;
   color: #991b1b;
 }
@@ -361,7 +373,10 @@ dd {
 
 .human-panel,
 .revision-panel,
-.versions-panel {
+.versions-panel,
+.improvement-panel,
+.improvement-history-panel,
+.evaluation-compare-panel {
   max-height: 320px;
   overflow: auto;
 }
@@ -390,15 +405,66 @@ dd {
   gap: 10px;
 }
 
-.revision-item {
+.improvement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.revision-item,
+.improvement-item {
   background: #f8fafc;
   border: 1px solid #dbe3ef;
   border-radius: 6px;
   padding: 10px;
 }
 
-.revision-item p {
+.revision-item p,
+.improvement-item p {
   margin-top: 6px;
+}
+
+.improvement-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.improvement-item label {
+  color: #394456;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+}
+
+.action-row {
+  display: flex;
+  gap: 8px;
+}
+
+.compare-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 12px;
+}
+
+.compare-grid h3 {
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+
+.compare-grid pre {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 6px;
+  font-size: 12px;
+  margin: 0;
+  max-height: 180px;
+  overflow: auto;
+  padding: 10px;
 }
 
 .artifact-item strong {

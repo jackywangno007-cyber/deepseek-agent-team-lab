@@ -1,6 +1,6 @@
 # DeepSeek Agent Team Lab
 
-DeepSeek Agent Team Lab is a lightweight local multi-agent collaboration system inspired by Manager-Workers architectures such as HiClaw. V0.1 validated the command-line agent runtime. V0.2 added a local FastAPI service. V0.3 adds a React dashboard for visual task creation, event streaming, artifact inspection, and evaluation review.
+DeepSeek Agent Team Lab is a lightweight local multi-agent collaboration system inspired by Manager-Workers architectures such as HiClaw. V0.1 validated the command-line agent runtime. V0.2 added a local FastAPI service. V0.3 added a React dashboard and human-in-the-loop revision workflow. V0.4 adds evaluation-driven improvement suggestions that keep humans in the approval loop.
 
 The system accepts a software project requirement, runs a fixed serial team of role-based agents, and writes every intermediate result as a markdown artifact inside an isolated task workspace.
 
@@ -268,6 +268,37 @@ Current limitations:
 - No task cancellation, pause, or resume controls.
 - Revision state is stored locally in workspace files rather than a database.
 
+## V0.4 Evaluation-driven Improvement
+
+V0.4 helps the system propose what to revise instead of relying entirely on the human to find issues manually.
+
+The flow is:
+
+1. ReviewerAgent writes `review_report.md`.
+2. Evaluator writes `evaluation.json`.
+3. User clicks "Generate improvement suggestions".
+4. The backend creates `improvement_suggestions.jsonl`.
+5. User approves, edits, or rejects each suggestion.
+6. Approved suggestions become normal V0.3 human feedback.
+7. Existing revision workflow runs and writes history.
+8. Evaluation comparison is saved as `evaluation_compare.json`.
+
+New workspace files:
+
+- `improvement_suggestions.jsonl`
+- `improvement_history.jsonl`
+- `evaluation_compare.json`
+
+Manual test:
+
+- Create a mock task in the browser.
+- Wait until it is completed.
+- Generate improvement suggestions.
+- Approve one suggestion with downstream rerun enabled.
+- Confirm EventTimeline shows improvement events.
+- Confirm ImprovementHistory and EvaluationComparePanel update.
+- Reject another suggestion and confirm the rejected status is persisted.
+
 ## Output Files
 
 Each run creates a directory like:
@@ -334,9 +365,9 @@ V0.2: Add a small FastAPI backend to start and inspect task runs. Completed.
 
 V0.3: Add a React visualization plus human-in-the-loop artifact revision workflow. Completed.
 
-V0.4: Add evaluation-driven improvement suggestions that parse review findings, propose revisions, and keep humans in the approval loop.
+V0.4: Add evaluation-driven improvement suggestions that parse review findings, propose revisions, and keep humans in the approval loop. Completed.
 
-The V0.4 design is documented in [docs/v0.4_design.md](docs/v0.4_design.md). It is a planning document only; V0.4 code has not been implemented yet.
+The V0.4 design is documented in [docs/v0.4_design.md](docs/v0.4_design.md).
 
 ## Resume-Ready Highlights
 

@@ -116,14 +116,36 @@ V0.3 is the first feature version developed on top of that baseline branch workf
 
 ## Next Version Plan
 
-V0.4 - Evaluation-driven Agent Improvement or Advanced AgentOps
+## V0.4 - Evaluation-driven Agent Improvement
+
+### Goal
+
+Upgrade the system from manual human-found revisions to system-proposed, human-approved improvement suggestions.
+
+### Added
+
+- Rule-based improvement suggestion generation from `review_report.md` and `evaluation.json`.
+- `improvement_suggestions.jsonl`.
+- `improvement_history.jsonl`.
+- `evaluation_compare.json`.
+- Improvement suggestion APIs.
+- Approve/reject suggestion APIs.
+- Reuse of V0.3 feedback and revision workflow after approval.
+- Frontend ImprovementSuggestions panel.
+- Frontend ImprovementHistory panel.
+- Frontend EvaluationComparePanel.
+
+### Validation
+
+V0.4 should be validated with mock task creation, suggestion generation, approval, revision, rejection, evaluation comparison, backend pytest, and frontend build.
+
+## Next Version Plan
+
+V0.5 - Advanced AgentOps Review
 
 Planned capabilities:
 
-- Parse ReviewerAgent findings and evaluator results.
-- Generate structured improvement suggestions.
-- Map each issue to a responsible agent and artifact.
-- Let humans approve, reject, or edit suggested revisions.
-- Reuse the V0.3 revision workflow after approval.
-- Compare evaluation results before and after revision.
-- Track improvement history in workspace files.
+- Diff views for artifact revisions.
+- More precise issue extraction.
+- Better evaluation scoring and trend history.
+- Optional approval gates before applying downstream reruns.

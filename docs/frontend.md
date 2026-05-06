@@ -1,6 +1,6 @@
-# V0.3 Frontend Architecture
+# V0.4 Frontend Architecture
 
-V0.3 adds a local React visualization UI for the existing FastAPI agent backend. The frontend is an API consumer only. It does not duplicate agent orchestration, artifact generation, evaluation, or task metadata logic.
+The React dashboard visualizes the FastAPI agent backend and V0.4 evaluation-driven improvement loop. The frontend is an API consumer only. It does not duplicate agent orchestration, artifact generation, evaluation, or task metadata logic.
 
 ## Stack
 
@@ -29,6 +29,9 @@ http://127.0.0.1:8000
 - `HumanControlPanel.tsx`: save human feedback and request revision.
 - `RevisionHistory.tsx`: show revision records.
 - `ArtifactVersions.tsx`: show backed up versions for the selected artifact.
+- `ImprovementSuggestions.tsx`: generate, edit, approve, and reject improvement suggestions.
+- `ImprovementHistory.tsx`: show approved and rejected improvement actions.
+- `EvaluationComparePanel.tsx`: show before/after evaluation data.
 - `StatusBadge.tsx`: shared status label component.
 
 ## API Client
@@ -49,6 +52,12 @@ http://127.0.0.1:8000
 - `listRevisions`
 - `listArtifactVersions`
 - `getArtifactVersion`
+- `generateImprovementSuggestions`
+- `listImprovementSuggestions`
+- `approveImprovementSuggestion`
+- `rejectImprovementSuggestion`
+- `getImprovementHistory`
+- `getEvaluationCompare`
 - `buildTaskEventsWebSocketUrl`
 
 Components should not construct backend URLs themselves.
@@ -73,6 +82,9 @@ When a `task_finished` message arrives, the frontend refreshes:
 - task list
 - artifacts
 - evaluation
+- human feedback and revisions
+- improvement suggestions and history
+- evaluation comparison
 
 ## Agent Status Derivation
 
@@ -87,16 +99,15 @@ When a `task_finished` message arrives, the frontend refreshes:
 
 No backend changes are required for these visual states.
 
-## V0.4 Preparation
+## V0.4 Improvement Flow
 
-The V0.3 UI establishes the visual surfaces needed for V0.4 human-in-the-loop controls:
+V0.4 adds a proactive but human-approved improvement loop:
 
-- selected task context
-- live event stream
-- agent status board
-- artifact viewer
-- evaluation result panel
+1. User creates a task and waits for completion.
+2. User generates improvement suggestions from review and evaluation outputs.
+3. User edits, approves, or rejects suggestions.
+4. Approved suggestions create normal human feedback.
+5. The existing V0.3 revision workflow runs.
+6. Evaluation comparison and improvement history refresh.
 
-V0.4 can add pause, resume, revise, and message-to-agent controls without changing the basic dashboard layout.
-
-V0.3 now includes the first human-in-the-loop revision workflow. Future versions can improve it with diff views, approval gates, and more granular downstream rerun controls.
+The UI must keep approval explicit. Suggestions are recommendations, not automatic revisions.
