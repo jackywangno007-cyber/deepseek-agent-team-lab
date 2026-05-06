@@ -62,18 +62,31 @@ Upgrade the project from an observable AgentOps dashboard into a controllable hu
 
 ### Added
 
-- Human feedback API
-- Feedback persistence in `human_feedback.jsonl`
+- Human feedback persistence
 - Artifact revision workflow
-- Artifact backup under `versions/`
-- Revision history in `revision_history.jsonl`
-- Downstream agent rerun after artifact changes
+- Artifact version backup
+- Revision history
+- Downstream agent rerun
 - Evaluation refresh after revision
-- Frontend HumanControlPanel
-- Frontend RevisionHistory
-- Frontend ArtifactVersions
-- Updated EventTimeline for revision events
+- HumanControlPanel
+- RevisionHistory
+- ArtifactVersions
+- Human feedback and revision events
 - Updated API and frontend documentation
+
+### Validation
+
+V0.3 was validated with:
+
+- Mock task creation
+- Human feedback saving
+- Artifact revision
+- Artifact version backup
+- Revision history display
+- Downstream rerun
+- Evaluation refresh
+- Backend pytest
+- Frontend build
 
 ### Engineering Lessons
 
@@ -83,7 +96,7 @@ Upgrade the project from an observable AgentOps dashboard into a controllable hu
 - Changing upstream artifacts should trigger downstream regeneration when needed.
 - A good multi-agent system should be observable, controllable, and reproducible.
 
-### Manual Validation
+### Manual Validation Details
 
 The following V0.3 behaviors were verified:
 

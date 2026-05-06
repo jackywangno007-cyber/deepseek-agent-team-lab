@@ -332,9 +332,9 @@ git tag v0.3.0
 
 V0.2: Add a small FastAPI backend to start and inspect task runs. Completed.
 
-V0.3: Add a React visualization for artifacts, event logs, and agent status.
+V0.3: Add a React visualization plus human-in-the-loop artifact revision workflow. Completed.
 
-V0.4: Add human-in-the-loop controls such as pause, resume, revise, and message-to-agent while keeping artifacts and boundaries explicit.
+V0.4: Add evaluation-driven improvement suggestions that parse review findings, propose revisions, and keep humans in the approval loop.
 
 ## Resume-Ready Highlights
 

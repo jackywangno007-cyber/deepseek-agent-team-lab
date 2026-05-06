@@ -90,6 +90,7 @@ export default function App() {
   const [versionsError, setVersionsError] = useState<string | null>(null);
   const [websocketStatus, setWebsocketStatus] = useState('IDLE');
   const socketRef = useRef<WebSocket | null>(null);
+  const backendStatusRef = useRef('CHECKING');
 
   const refreshTasks = useCallback(async () => {
     setTaskListLoading(true);
@@ -315,11 +316,35 @@ export default function App() {
   }
 
   useEffect(() => {
-    getHealth()
-      .then(() => setBackendStatus('OK'))
-      .catch(() => setBackendStatus('OFFLINE'));
-    refreshTasks();
-    return () => socketRef.current?.close();
+    let active = true;
+    async function checkBackend() {
+      try {
+        await getHealth();
+        if (!active) {
+          return;
+        }
+        const wasOffline = backendStatusRef.current !== 'OK';
+        backendStatusRef.current = 'OK';
+        setBackendStatus('OK');
+        if (wasOffline) {
+          refreshTasks();
+        }
+      } catch {
+        if (!active) {
+          return;
+        }
+        backendStatusRef.current = 'OFFLINE';
+        setBackendStatus('OFFLINE');
+      }
+    }
+
+    checkBackend();
+    const intervalId = window.setInterval(checkBackend, 3000);
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+      socketRef.current?.close();
+    };
   }, [refreshTasks]);
 
   useEffect(() => {

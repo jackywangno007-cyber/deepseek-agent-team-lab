@@ -92,3 +92,41 @@ Upgrade the observable AgentOps dashboard into a human-in-the-loop multi-agent c
 ### Next Steps
 
 V0.4 - Evaluation-driven agent improvement or more advanced AgentOps features.
+
+## 2026-05-06 - V0.3 Final Polish
+
+### Goal
+
+Finalize small V0.3 reliability and documentation fixes before moving into V0.4 design.
+
+### Changes
+
+- Allowed local development CORS origins across localhost and 127.0.0.1 ports.
+- Stopped sending `Content-Type: application/json` on bodyless frontend GET requests.
+- Added periodic backend health checks so the UI can recover from an initial offline state.
+- Hardened `.env` parsing by trimming accidental spaces and wrapping quotes.
+- Updated V0.3 version notes and roadmap language.
+
+### Tests Run
+
+- `.venv\Scripts\python.exe -m pytest`
+- `npm install` from `frontend/`
+- `npm run build` from `frontend/`
+- Manual CORS preflight check for `OPTIONS /api/health`
+- Manual backend health check for `GET /api/health`
+
+### Issues Fixed
+
+- Browser CORS preflight requests to `/api/health` could return `400 Bad Request`.
+- The dashboard could remain `OFFLINE` if the backend started after the frontend page loaded.
+- `.env` values with accidental quotes or surrounding whitespace could cause confusing connection failures.
+
+### Lessons Learned
+
+- Local dashboards should tolerate backend restart order during manual testing.
+- GET requests should avoid unnecessary JSON headers to reduce CORS preflight behavior.
+- CORS tests should include both `localhost` and `127.0.0.1` origins.
+
+### Next Steps
+
+V0.4 - Evaluation-driven agent improvement or more advanced AgentOps features.
