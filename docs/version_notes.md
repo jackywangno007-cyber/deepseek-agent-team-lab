@@ -120,8 +120,10 @@ V0.4 - Evaluation-driven Agent Improvement or Advanced AgentOps
 
 Planned capabilities:
 
-- Revision diff views
-- Approval gates before overwriting artifacts
-- More detailed evaluator feedback
-- Agent quality metrics across task runs
-- Better AgentOps controls for long-running work
+- Parse ReviewerAgent findings and evaluator results.
+- Generate structured improvement suggestions.
+- Map each issue to a responsible agent and artifact.
+- Let humans approve, reject, or edit suggested revisions.
+- Reuse the V0.3 revision workflow after approval.
+- Compare evaluation results before and after revision.
+- Track improvement history in workspace files.

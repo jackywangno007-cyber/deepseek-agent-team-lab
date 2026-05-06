@@ -86,6 +86,15 @@ pytest
 - Keep CLI, API, and frontend working together.
 - Do not expose API keys in browser-visible code or responses.
 
+## V0.4 Design Rules
+
+- V0.4 is currently design-only unless the user explicitly asks for implementation.
+- Keep evaluation-driven improvement suggestions human-approved.
+- Reuse the V0.3 human feedback and revision workflow after approval.
+- Keep `workspace/` as the source of truth.
+- Do not add a database, authentication, Docker, or generated shell execution in V0.4 planning.
+- Store suggested future artifacts as workspace files such as `improvement_suggestions.jsonl`, `improvement_history.jsonl`, and `evaluation_compare.json`.
+
 ## Things Not To Do
 
 - Do not add LangChain, CrewAI, AutoGen, or LangGraph in V0.1.

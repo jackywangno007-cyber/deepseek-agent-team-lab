@@ -336,6 +336,8 @@ V0.3: Add a React visualization plus human-in-the-loop artifact revision workflo
 
 V0.4: Add evaluation-driven improvement suggestions that parse review findings, propose revisions, and keep humans in the approval loop.
 
+The V0.4 design is documented in [docs/v0.4_design.md](docs/v0.4_design.md). It is a planning document only; V0.4 code has not been implemented yet.
+
 ## Resume-Ready Highlights
 
 - Built a framework-free Manager-Workers multi-agent pipeline.

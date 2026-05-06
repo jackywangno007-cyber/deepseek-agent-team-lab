@@ -93,6 +93,39 @@ Upgrade the observable AgentOps dashboard into a human-in-the-loop multi-agent c
 
 V0.4 - Evaluation-driven agent improvement or more advanced AgentOps features.
 
+## 2026-05-06 - V0.4 Design
+
+### Goal
+
+Design the next engineering iteration without implementing V0.4 code.
+
+### Changes
+
+- Added `docs/v0.4_design.md`.
+- Defined the V0.4 theme: evaluation-driven agent improvement.
+- Planned improvement suggestions, approval/rejection flow, and before/after evaluation comparison.
+- Documented that V0.4 must reuse the V0.3 human feedback and revision workflow.
+
+### Tests Run
+
+- No code changes for V0.4 design.
+- V0.3 final polish was validated before this branch with `pytest` and `npm run build`.
+
+### Issues Encountered
+
+- V0.4 needs to stay proactive without becoming fully automatic. Human approval remains a product and safety requirement.
+
+### Lessons Learned
+
+- V0.3 makes revision possible; V0.4 should make the system better at proposing what to revise.
+- Keeping improvement suggestions as workspace artifacts preserves the project’s artifact-driven architecture.
+
+### Next Steps
+
+- Implement suggestion extraction in a small backend service.
+- Add frontend panels for suggestions and evaluation comparison.
+- Keep all V0.4 changes behind explicit human approval.
+
 ## 2026-05-06 - V0.3 Final Polish
 
 ### Goal
